@@ -1,2 +1,4 @@
 # IntelliJ project files
 .idea
+
+__pycache__/
