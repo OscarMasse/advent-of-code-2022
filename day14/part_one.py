@@ -33,6 +33,7 @@ class Point:
                 output.extend([Point(x, a.y) for x in range(x_min, x_max + 1)])
         return output
 
+
 class Screen(Iterable):
     @dataclass
     class Line(Iterable):
@@ -62,13 +63,6 @@ class Screen(Iterable):
 
         def __str__(self):
             return ''.join(self.elements)
-
-        def add_column_left(self):
-            self.elements.insert(0, '.')
-            self.offset += 1
-
-        def add_column_right(self):
-            self.elements.append('.')
 
     matrix: list[Line]
     offset: int = 0
@@ -103,13 +97,8 @@ class Screen(Iterable):
 
     def __getitem__(self, key: int | Point):
         if isinstance(key, Point):
-            y = key.y - self.offset
-            if key.x + self.matrix[y].offset >= len(self.matrix[y]):
-                self.add_column_right()
-            elif key.x + self.matrix[y].offset < 0:
-                self.add_column_left()
-            return self.matrix[y][key.x]
-        return self.matrix[key - self.offset]
+            return self.matrix[key.y + self.offset][key.x]
+        return self.matrix[key + self.offset]
 
     def __setitem__(self, key: int | Point, value):
         if isinstance(key, Point):
@@ -125,36 +114,25 @@ class Screen(Iterable):
     def y_max(self) -> int:
         return -self.offset + len(self.matrix) - 1
 
-    def add_column_left(self):
-        for line in self.matrix:
-            line.add_column_left()
-
-    def add_column_right(self):
-        for line in self.matrix:
-            line.add_column_right()
-
     def print(self, count: int | None):
         first_line = self[0]
         print(f"   [{first_line.x_min}-{first_line.x_max}{f' - Sand units: {count}' if count else ''}]")
         for index, line in enumerate(self.matrix, start=self.offset):
             print(f"{'{:3d}'.format(index)} {str(line)}")
-        # Bedrock
-        print("    " + "#" * len(self[0]) + '\n')
+        print('\n')
 
 
 def solve():
     source = Point(500, 0)
     screen = Screen(load_input(), source)
     sand_count = 0
-    while not screen[source] == 'o':
+    running = True
+    while running:
         sand_unit = source
         while True:
-            # Bedrock
+            # Abyss
             if sand_unit.y == screen.y_max:
-                # Idle
-                screen[sand_unit] = 'o'
-                sand_count += 1
-                screen.print(sand_count)
+                running = False
                 break
 
             # Bottom
